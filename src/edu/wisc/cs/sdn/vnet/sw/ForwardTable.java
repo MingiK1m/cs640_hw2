@@ -1,13 +1,14 @@
 package edu.wisc.cs.sdn.vnet.sw;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import edu.wisc.cs.sdn.vnet.Iface;
 import net.floodlightcontroller.packet.MACAddress;
 
 public class ForwardTable {
-	private final long MS_15SEC = 15*1000;
+	private final long TIMEOUT_MS = 15*1000; /* 15 sec */
 	private Map<MACAddress, TableItem> forwardTableMap;
 	
 	public ForwardTable(){
@@ -17,13 +18,7 @@ public class ForwardTable {
 	public Iface lookUpForwardTable(MACAddress destMACAddress){
 		if(forwardTableMap.containsKey(destMACAddress)){
 			TableItem entry = forwardTableMap.get(destMACAddress);
-			if(System.currentTimeMillis()-entry.getTimestamp() > MS_15SEC){
-				forwardTableMap.remove(destMACAddress);
-				return null;
-			}
-			else {
-				return entry.getInterface();
-			}
+			return entry.getInterface();
 		}
 		
 		return null;
@@ -35,6 +30,21 @@ public class ForwardTable {
 		}
 		TableItem newEntry = new TableItem(nextHop);
 		forwardTableMap.put(destMACAddress, newEntry);
+	}
+	
+	public synchronized void updateTable(){
+		long curTime = System.currentTimeMillis();
+		
+		Iterator<MACAddress> keysetIter = forwardTableMap.keySet().iterator();
+		
+		while(keysetIter.hasNext()){
+			MACAddress macAddr = keysetIter.next();
+			TableItem entry = forwardTableMap.get(macAddr);
+			
+			if(curTime-entry.getTimestamp() > TIMEOUT_MS){
+				keysetIter.remove();
+			}
+		}
 	}
 	
 	private class TableItem{
