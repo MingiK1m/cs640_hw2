@@ -1,7 +1,6 @@
 package edu.wisc.cs.sdn.vnet.sw;
 
 import java.util.Iterator;
-import java.util.Map;
 
 import edu.wisc.cs.sdn.vnet.Device;
 import edu.wisc.cs.sdn.vnet.DumpFile;
@@ -37,22 +36,25 @@ public class Switch extends Device
 		
 		/********************************************************************/
 		// 1. update table
-		MACAddress src_mac = etherPacket.getSourceMAC();
-		forward_table.addForwardEntry(src_mac, inIface);
+		MACAddress srcMac = etherPacket.getSourceMAC();
+		forward_table.addForwardEntry(srcMac, inIface);
 		
 		// 2. find interface
-		MACAddress dest_mac = etherPacket.getDestinationMAC();
-		Iface out_iface = forward_table.lookUpForwardTable(dest_mac);
+		MACAddress destMac = etherPacket.getDestinationMAC();
+		Iface outIface = forward_table.lookUpForwardTable(destMac);
 		
 		// 3. send packets
-		if(out_iface == null){
+		if(outIface == null){
 			// couldn't find table entry or time out.
 			// send the packet to all ifaces.
-			Iterator<String> keyset_iter = getInterfaces().keySet().iterator();
+			Iterator<String> keysetIter = getInterfaces().keySet().iterator();
 			
-			while(keyset_iter.hasNext()){
-				String name = keyset_iter.next();
+			while(keysetIter.hasNext()){
+				String name = keysetIter.next();
 				Iface iface = interfaces.get(name);
+				
+				if(iface.getName() == inIface.getName()) 
+					continue; // don't send the packet back to where it came from
 				
 				sendPacket(etherPacket, iface);
 			}
@@ -60,7 +62,7 @@ public class Switch extends Device
 		else {
 			// found entry
 			// send the packet to iface found on the table.
-			sendPacket(etherPacket, out_iface);
+			sendPacket(etherPacket, outIface);
 		}
 		/********************************************************************/
 	}

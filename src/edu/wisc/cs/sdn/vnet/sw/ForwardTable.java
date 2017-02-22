@@ -29,11 +29,11 @@ public class ForwardTable {
 		return null;
 	}
 	
-	public void addForwardEntry(MACAddress destMACAddress, Iface next_hop){
+	public void addForwardEntry(MACAddress destMACAddress, Iface nextHop){
 		if(forwardTableMap.containsKey(destMACAddress)){
 			forwardTableMap.remove(destMACAddress);
 		}
-		TableItem newEntry = new TableItem(next_hop);
+		TableItem newEntry = new TableItem(nextHop);
 		forwardTableMap.put(destMACAddress, newEntry);
 	}
 	
