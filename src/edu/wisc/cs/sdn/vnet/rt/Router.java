@@ -102,8 +102,10 @@ public class Router extends Device
 		short checksum = packet.getChecksum();
 		int headerLength = packet.getHeaderLength();
 		
+		System.out.println("headerLength : " + headerLength);
+		
 		// checksum reset to 0
-		packet.setChecksum((short) 0);
+		packet.resetChecksum();
 
 		byte[] data = packet.serialize();
         ByteBuffer bb = ByteBuffer.wrap(data);
@@ -116,7 +118,7 @@ public class Router extends Device
         accumulation = ((accumulation >> 16) & 0xffff)
                 + (accumulation & 0xffff);
         
-        if(checksum != (~accumulation & 0xffff)){
+        if(checksum != (short)(~accumulation & 0xffff)){
         	// if calculated checksum is different from received one
         	// drop packet
 			System.out.println("Checksum is not matched");
