@@ -39,20 +39,16 @@ public class RouteTable
         {
 			/*****************************************************************/
 			RouteEntry bestMatchEntry = null;
-
-	        synchronized(this.entries)
-	        {
-	        	int maxMask = 0;
-	            for (RouteEntry entry : this.entries)
-	            {
-	            	int destAddr = entry.getDestinationAddress();
-	            	int maskAddr = entry.getMaskAddress();
-	            	
-	            	if((destAddr == (ip & maskAddr)) 
-	            			&& ((maxMask & 0xffffffffL) < (maskAddr & 0xffffffffL))){
-	            		maxMask = maskAddr;
-	            		bestMatchEntry = entry;
-	            	}
+			
+	        int maxMask = 0;
+	        for (RouteEntry entry : this.entries){
+	            int destAddr = entry.getDestinationAddress();
+	            int maskAddr = entry.getMaskAddress();
+	            
+	            if(( (destAddr & maskAddr) == (ip & maskAddr) ) 
+	            		&& ((maxMask & 0xffffffffL) < (maskAddr & 0xffffffffL))){
+	            	maxMask = maskAddr;
+	            	bestMatchEntry = entry;
 	            }
 	        }
 	        

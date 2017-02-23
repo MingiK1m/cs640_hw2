@@ -92,6 +92,7 @@ public class Router extends Device
 		if(etherPacket.getEtherType() != Ethernet.TYPE_IPv4){
 			// if the incoming packet type is not ipv4
 			// drop packet
+			System.out.println("Packet Type is not IPv4");
 			return;
 		}
 		
@@ -118,6 +119,7 @@ public class Router extends Device
         if(checksum != (~accumulation & 0xffff)){
         	// if calculated checksum is different from received one
         	// drop packet
+			System.out.println("Checksum is not matched");
         	return;
         }
         
@@ -128,6 +130,7 @@ public class Router extends Device
         if(ttl==0){
         	// if ttl becomes 0
         	// drop packet
+			System.out.println("TTL expired");
         	return;
         }
         packet.setTtl(ttl);
@@ -138,6 +141,7 @@ public class Router extends Device
         	if(iface.getIpAddress() == packet.getDestinationAddress()){
         		// if router has interface for dest ip
         		// drop packet
+    			System.out.println("destination interface found");
         		return;
         	}
         }
@@ -147,6 +151,7 @@ public class Router extends Device
         if(routeEntry == null){
         	// if no route entry matches
         	// drop packet
+			System.out.println("Destination interface found");
         	return;
         }
         
