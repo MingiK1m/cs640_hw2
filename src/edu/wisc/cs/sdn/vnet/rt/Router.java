@@ -98,19 +98,19 @@ public class Router extends Device
 		
 		IPv4 packet = (IPv4) etherPacket.getPayload();
 		
+		System.out.println("version :" + packet.getVersion() + ", source addr :" +packet.getSourceAddress() + ", dest addr :"+ packet.getDestinationAddress());
+		
 		// 2. Check the packet checksum
 		short checksum = packet.getChecksum();
-		int headerLength = packet.getHeaderLength();
-		
-		// checksum reset to 0
-		packet.resetChecksum();
 
 		byte[] data = packet.serialize();
         ByteBuffer bb = ByteBuffer.wrap(data);
+        
+        bb.putShort(10,(short) 0x0000);
 
         // calculate checksum
         int accumulation = 0;
-        for (int i = 0; i < headerLength * 2; ++i) {
+        for (int i = 0; i < packet.getHeaderLength() * 2; ++i) {
             accumulation += 0xffff & bb.getShort();
         }
         accumulation = ((accumulation >> 16) & 0xffff)
@@ -121,7 +121,7 @@ public class Router extends Device
         if(checksum != checksumCalcd){
         	// if calculated checksum is different from received one
         	// drop packet
-			System.out.println("Checksum is not matched (ori:"+checksum+", calcd:"+checksumCalcd);
+			System.out.println("Checksum is not matched (ori:"+checksum+", calcd:"+checksumCalcd+")");
         	return;
         }
         
@@ -163,18 +163,9 @@ public class Router extends Device
         etherPacket.setSourceMACAddress(routeEntry.getInterface().getMacAddress().toBytes());
         
         // 7. update checksum
-		data = packet.serialize();
-        bb = ByteBuffer.wrap(data);
-        
-        accumulation = 0;
-        for (int i = 0; i < headerLength * 2; ++i) {
-            accumulation += 0xffff & bb.getShort();
-        }
-        accumulation = ((accumulation >> 16) & 0xffff)
-                + (accumulation & 0xffff);
-        
-        packet.setChecksum((short)(~accumulation & 0xffff));
-        
+		packet.resetChecksum();
+        packet.serialize();
+		
         // 8. send packet
         sendPacket(etherPacket, routeEntry.getInterface());
 		
