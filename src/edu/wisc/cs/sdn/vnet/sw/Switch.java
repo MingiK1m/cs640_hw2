@@ -25,6 +25,8 @@ public class Switch extends Device
 	{
 		super(host,logfile);
 		forward_table = new ForwardTable();
+		
+		// timer for update forwarding table
 		timer = new Timer();
 		timer.schedule(garbageCollectTask, 0, GARBAGE_COLLECT_PERIOD);
 	}

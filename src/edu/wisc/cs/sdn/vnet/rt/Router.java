@@ -1,10 +1,13 @@
 package edu.wisc.cs.sdn.vnet.rt;
 
+import java.nio.ByteBuffer;
+import java.util.Map.Entry;
+
 import edu.wisc.cs.sdn.vnet.Device;
 import edu.wisc.cs.sdn.vnet.DumpFile;
 import edu.wisc.cs.sdn.vnet.Iface;
-
 import net.floodlightcontroller.packet.Ethernet;
+import net.floodlightcontroller.packet.IPv4;
 
 /**
  * @author Aaron Gember-Jacobson and Anubhavnidhi Abhashkumar
@@ -84,7 +87,89 @@ public class Router extends Device
 		
 		/********************************************************************/
 		/* TODO: Handle packets                                             */
+
+		// 1. Check the incoming packet type
+		if(etherPacket.getEtherType() != Ethernet.TYPE_IPv4){
+			// if the incoming packet type is not ipv4
+			// drop packet
+			return;
+		}
 		
+		IPv4 packet = (IPv4) etherPacket.getPayload();
+		
+		// 2. Check the packet checksum
+		short checksum = packet.getChecksum();
+		int headerLength = packet.getHeaderLength();
+		
+		// checksum reset to 0
+		packet.setChecksum((short) 0);
+
+		byte[] data = packet.serialize();
+        ByteBuffer bb = ByteBuffer.wrap(data);
+
+        // calculate checksum
+        int accumulation = 0;
+        for (int i = 0; i < headerLength * 2; ++i) {
+            accumulation += 0xffff & bb.getShort();
+        }
+        accumulation = ((accumulation >> 16) & 0xffff)
+                + (accumulation & 0xffff);
+        
+        if(checksum != (~accumulation & 0xffff)){
+        	// if calculated checksum is different from received one
+        	// drop packet
+        	return;
+        }
+        
+        // 3. Decrease and Check TTL
+        byte ttl = packet.getTtl();
+        ttl--;
+        
+        if(ttl==0){
+        	// if ttl becomes 0
+        	// drop packet
+        	return;
+        }
+        packet.setTtl(ttl);
+        
+        // 4. Check interfaces that has dest IP.
+        for(Entry<String, Iface> entry : this.interfaces.entrySet()){
+        	Iface iface = entry.getValue();
+        	if(iface.getIpAddress() == packet.getDestinationAddress()){
+        		// if router has interface for dest ip
+        		// drop packet
+        		return;
+        	}
+        }
+        
+        // 5. lookup route table
+        RouteEntry routeEntry = this.getRouteTable().lookup(packet.getDestinationAddress());
+        if(routeEntry == null){
+        	// if no route entry matches
+        	// drop packet
+        	return;
+        }
+        
+        // 6. lookup ARP cache and change the packet's dest mac addr
+        ArpEntry arpEntry = this.arpCache.lookup(packet.getDestinationAddress());
+        etherPacket.setDestinationMACAddress(arpEntry.getMac().toBytes());
+        etherPacket.setSourceMACAddress(routeEntry.getInterface().getMacAddress().toBytes());
+        
+        // 7. update checksum
+		data = packet.serialize();
+        bb = ByteBuffer.wrap(data);
+        
+        accumulation = 0;
+        for (int i = 0; i < headerLength * 2; ++i) {
+            accumulation += 0xffff & bb.getShort();
+        }
+        accumulation = ((accumulation >> 16) & 0xffff)
+                + (accumulation & 0xffff);
+        
+        packet.setChecksum((short)(~accumulation & 0xffff));
+        
+        // 8. send packet
+        sendPacket(etherPacket, routeEntry.getInterface());
 		
 		/********************************************************************/
 	}
