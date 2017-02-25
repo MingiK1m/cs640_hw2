@@ -14,6 +14,8 @@ import net.floodlightcontroller.packet.IPv4;
  */
 public class Router extends Device
 {	
+	private final boolean DEBUG = true;
+	
 	/** Routing table for the router */
 	private RouteTable routeTable;
 
@@ -92,7 +94,7 @@ public class Router extends Device
 		if(etherPacket.getEtherType() != Ethernet.TYPE_IPv4){
 			// if the incoming packet type is not ipv4
 			// drop packet
-			System.out.println("Packet Type is not IPv4");
+			if(DEBUG) System.out.println("Packet Type is not IPv4");
 			return;
 		}
 
@@ -119,7 +121,7 @@ public class Router extends Device
 		if(checksum != checksumCalcd){
 			// if calculated checksum is different from received one
 			// drop packet
-			System.out.println("Checksum is not matched (ori:"+checksum+", calcd:"+checksumCalcd+")");
+			if(DEBUG) System.out.println("Checksum is not matched (ori:"+checksum+", calcd:"+checksumCalcd+")");
 			return;
 		}
 
@@ -130,7 +132,7 @@ public class Router extends Device
 		if(ttl==0){
 			// if ttl becomes 0
 			// drop packet
-			System.out.println("TTL expired");
+			if(DEBUG) System.out.println("TTL expired");
 			return;
 		}
 		packet.setTtl(ttl);
@@ -141,7 +143,7 @@ public class Router extends Device
 			if(iface.getIpAddress() == packet.getDestinationAddress()){
 				// if router has interface for dest ip
 				// drop packet
-				System.out.println("Destination interface found");
+				if(DEBUG) System.out.println("Destination interface IP is found on router");
 				return;
 			}
 		}
@@ -151,12 +153,17 @@ public class Router extends Device
 		if(routeEntry == null){
 			// if no route entry matches
 			// drop packet
-			System.out.println("Route entry to dest addr not found");
+			if(DEBUG) System.out.println("Route entry to dest addr not found");
 			return;
 		}
 
 		// 6. lookup ARP cache and change the packet's dest mac addr
-		ArpEntry arpEntry = this.arpCache.lookup(routeEntry.getDestinationAddress());
+		ArpEntry arpEntry = this.arpCache.lookup(packet.getDestinationAddress());
+		if(arpEntry == null){
+			// if no arp entry matches
+			// drop packet
+			if(DEBUG) System.out.println("ARP entry to dest addr not found");
+		}
 		etherPacket.setDestinationMACAddress(arpEntry.getMac().toBytes());
 		etherPacket.setSourceMACAddress(routeEntry.getInterface().getMacAddress().toBytes());
 

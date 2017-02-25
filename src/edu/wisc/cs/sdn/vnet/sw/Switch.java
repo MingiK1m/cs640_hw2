@@ -15,6 +15,7 @@ import net.floodlightcontroller.packet.MACAddress;
  */
 public class Switch extends Device
 {	
+
 	private final long GARBAGE_COLLECT_PERIOD = 1 * 1000; /* 1 sec */
 	private ForwardTable forward_table;
 	/**
@@ -25,7 +26,7 @@ public class Switch extends Device
 	{
 		super(host,logfile);
 		forward_table = new ForwardTable();
-		
+
 		// timer for update forwarding table
 		timer = new Timer();
 		timer.schedule(garbageCollectTask, 0, GARBAGE_COLLECT_PERIOD);
@@ -39,30 +40,30 @@ public class Switch extends Device
 	public void handlePacket(Ethernet etherPacket, Iface inIface)
 	{
 		System.out.println("*** -> Received packet: " +
-                etherPacket.toString().replace("\n", "\n\t"));
-		
+				etherPacket.toString().replace("\n", "\n\t"));
+
 		/********************************************************************/
 		// 1. update table
 		MACAddress srcMac = etherPacket.getSourceMAC();
 		forward_table.addForwardEntry(srcMac, inIface);
-		
+
 		// 2. find interface
 		MACAddress destMac = etherPacket.getDestinationMAC();
 		Iface outIface = forward_table.lookUpForwardTable(destMac);
-		
+
 		// 3. send packets
 		if(outIface == null){
 			// couldn't find table entry or time out.
 			// send the packet to all ifaces.
 			Iterator<String> keysetIter = getInterfaces().keySet().iterator();
-			
+
 			while(keysetIter.hasNext()){
 				String name = keysetIter.next();
 				Iface iface = interfaces.get(name);
-				
+
 				if(iface.getName() == inIface.getName()) 
 					continue; // don't send the packet back to where it came from
-				
+
 				sendPacket(etherPacket, iface);
 			}
 		} 
@@ -73,7 +74,7 @@ public class Switch extends Device
 		}
 		/********************************************************************/
 	}
-	
+
 	private Timer timer;
 	private TimerTask garbageCollectTask = new TimerTask() {
 		@Override
