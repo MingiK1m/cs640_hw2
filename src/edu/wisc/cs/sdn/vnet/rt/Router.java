@@ -156,6 +156,12 @@ public class Router extends Device
 			if(DEBUG) System.out.println("Route entry to dest addr not found");
 			return;
 		}
+		if(routeEntry.getInterface() == inIface){
+			// if incoming packet's interface is same with out interface
+			// drop packet
+			if(DEBUG) System.out.println("Found route entry has the same interface that the packet came from");
+			return;			
+		}
 
 		// 6. lookup ARP cache and change the packet's dest mac addr
 		ArpEntry arpEntry = this.arpCache.lookup(packet.getDestinationAddress());
