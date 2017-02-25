@@ -163,6 +163,7 @@ public class Router extends Device
 			// if no arp entry matches
 			// drop packet
 			if(DEBUG) System.out.println("ARP entry to dest addr not found");
+			return;
 		}
 		etherPacket.setDestinationMACAddress(arpEntry.getMac().toBytes());
 		etherPacket.setSourceMACAddress(routeEntry.getInterface().getMacAddress().toBytes());
