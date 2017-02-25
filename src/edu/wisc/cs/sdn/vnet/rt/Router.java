@@ -14,8 +14,8 @@ import net.floodlightcontroller.packet.IPv4;
  */
 public class Router extends Device
 {	
-	private final boolean DEBUG = true;
-	
+	private final boolean DEBUG = false;
+
 	/** Routing table for the router */
 	private RouteTable routeTable;
 

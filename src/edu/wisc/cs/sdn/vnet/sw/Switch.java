@@ -15,7 +15,6 @@ import net.floodlightcontroller.packet.MACAddress;
  */
 public class Switch extends Device
 {	
-
 	private final long GARBAGE_COLLECT_PERIOD = 1 * 1000; /* 1 sec */
 	private ForwardTable forward_table;
 	/**

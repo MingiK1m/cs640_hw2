@@ -8,8 +8,8 @@ import edu.wisc.cs.sdn.vnet.Iface;
 import net.floodlightcontroller.packet.MACAddress;
 
 public class ForwardTable {
-	private final boolean DEBUG = true;
-	
+	private final boolean DEBUG = false;
+
 	private final long TIMEOUT_MS = 15*1000; /* 15 sec */
 	private Map<MACAddress, TableItem> forwardTableMap;
 
