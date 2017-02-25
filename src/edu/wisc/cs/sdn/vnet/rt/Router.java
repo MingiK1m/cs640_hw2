@@ -141,7 +141,7 @@ public class Router extends Device
 			if(iface.getIpAddress() == packet.getDestinationAddress()){
 				// if router has interface for dest ip
 				// drop packet
-				System.out.println("destination interface found");
+				System.out.println("Destination interface found");
 				return;
 			}
 		}
@@ -151,18 +151,19 @@ public class Router extends Device
 		if(routeEntry == null){
 			// if no route entry matches
 			// drop packet
-			System.out.println("Destination interface found");
+			System.out.println("Route entry to dest addr not found");
 			return;
 		}
 
 		// 6. lookup ARP cache and change the packet's dest mac addr
-		ArpEntry arpEntry = this.arpCache.lookup(packet.getDestinationAddress());
+		ArpEntry arpEntry = this.arpCache.lookup(routeEntry.getDestinationAddress());
 		etherPacket.setDestinationMACAddress(arpEntry.getMac().toBytes());
 		etherPacket.setSourceMACAddress(routeEntry.getInterface().getMacAddress().toBytes());
 
 		// 7. update checksum
+		// if you set your checksum to 0, serialize method wiil calculate the checksum value.
 		packet.resetChecksum();
-		packet.serialize();
+		packet.serialize(); 
 
 		// 8. send packet
 		sendPacket(etherPacket, routeEntry.getInterface());
